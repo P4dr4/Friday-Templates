@@ -1,4 +1,4 @@
-name: Create Angular App
+name: Create Angular app
 
 on:
   push:
@@ -33,17 +33,25 @@ jobs:
             # Display success message
             echo "Angular application created successfully!"
 
-      - name: Copy to New Repository
-        uses: actions/checkout@v2
-        with:
-          repository: p4dr4/main
-          path: ../
-    
-      - name: Commit and Push Changes
+      - name: Configure Git and GPG
         run: |
-            cd ../main-repo
             git config --global user.email "paccarini.bar@outlook.com"
             git config --global user.name "p4dr4"
+            echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import
+            echo "${{ secrets.GPG_PASSPHRASE }}" > passphrase.txt
+            export GPG_TTY=$(tty)
+
+      - name: Create New Branch
+        run: git checkout -b master
+
+      - name: Debugging - Print contents of passphrase.txt
+        run: cat passphrase.txt
+      
+      - name: Commit and Push Changes
+        run: |
+            cd "${{ github.workspace }}/my-angular-app"  # Navigate to the directory of your Angular application
             git add .
-            git commit -S -m "Add Angular application"
-            git push
+            export GPG_TTY=$(tty)
+            gpg --batch --pinentry-mode loopback --passphrase-file "${{ github.workspace }}/passphrase.txt" --sign -a -s
+            git commit -m "Add Angular application"
+            git push origin master
