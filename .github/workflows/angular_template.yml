@@ -1,0 +1,49 @@
+name: Create Angular App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create Angular App
+        run: |
+            # Navigate to the directory where you want to create the Angular application
+            cd "${{ github.workspace }}"
+            
+            # Install Angular CLI globally if not already installed
+            npm install -g @angular/cli
+            
+            # Create a new Angular application
+            ng new my-angular-app --defaults
+            
+            # Navigate into the newly created directory
+            cd my-angular-app
+            
+            # Build the Angular application (optional)
+            ng build
+            
+            # Display success message
+            echo "Angular application created successfully!"
+
+      - name: Copy to New Repository
+        uses: actions/checkout@v2
+        with:
+          repository: p4dr4/main
+          path: ../
+    
+      - name: Commit and Push Changes
+        run: |
+            cd ../main-repo
+            git config --global user.email "paccarini.bar@outlook.com"
+            git config --global user.name "p4dr4"
+            git add .
+            git commit -S -m "Add Angular application"
+            git push
